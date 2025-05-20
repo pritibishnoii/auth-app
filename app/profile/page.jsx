@@ -24,15 +24,10 @@ const profilePage = () => {
         if ( !storedUser ) {
             router.push( "/" )
         }
-        try {
+
+        setUser( JSON.parse( storedUser ) )
 
 
-            setUser( JSON.parse( storedUser ) )
-
-        } catch ( error ) {
-            localStorage.clear();
-            router.push( "/" )
-        }
     }, [ router ] )
 
 
