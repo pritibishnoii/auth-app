@@ -18,15 +18,22 @@ const profilePage = () => {
 
     useEffect( () => {
 
-
+        if ( typeof window === "undefined" ) return; //only run on client
         const storedUser = localStorage.getItem( "user" )
         // console.log( "storedUser", storedUser )
         if ( !storedUser ) {
             router.push( "/" )
-        } else {
-            setUser( JSON.parse( storedUser ) )
         }
-    }, [] )
+        try {
+
+
+            setUser( JSON.parse( storedUser ) )
+
+        } catch ( error ) {
+            localStorage.clear();
+            router.push( "/" )
+        }
+    }, [ router ] )
 
 
 
