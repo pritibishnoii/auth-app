@@ -38,7 +38,7 @@ export const register = async ( req ) => {
         );
 
     } catch ( error ) {
-        return handleError( error, "Registration failed" );
+        return NextResponse.json( { error, message: "Registration failed" } );
     }
 };
 
@@ -87,6 +87,6 @@ export const login = async ( req ) => {
         );
 
     } catch ( error ) {
-        return handleError( error, "Login failed" );
+        return NextResponse.json( { error, message: "Login failed" } );
     }
 };
