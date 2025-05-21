@@ -1,109 +1,96 @@
 "use client";
-import Navbar from '@/components/Navbar';
 import React, { useEffect, useState } from "react";
-import { FaUser, FaEnvelope, FaSignOutAlt } from "react-icons/fa";
+
+import {
+    FaUser,
+    FaEnvelope,
+    FaLock,
+    FaSignInAlt,
+    FaUserPlus,
+    FaSignOutAlt,
+} from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import Navbar from "@/components/Navbar";
 
 const ProfilePage = () => {
     const [ user, setUser ] = useState( null );
-    const [ loading, setLoading ] = useState( true );
-    const [ mounted, setMounted ] = useState( false )
+    const [ isLoading, setIsLoading ] = useState( true );
     const router = useRouter();
 
     useEffect( () => {
-
-        setMounted( true ); // Mark component as mounted (client-side)
-        // Ensure this only runs on client side
-        if ( typeof window === "undefined" ) {
-            setLoading( false );
-            return;
-        }
-
-        const storedUser = localStorage.getItem( "user" );
-        const token = localStorage.getItem( "token" );
-
-        if ( !storedUser || !token ) {
-            router.push( "/" );
-            return;
-        }
-
-        try {
-            const parsedUser = JSON.parse( storedUser );
-            if ( parsedUser ) {
-                setUser( parsedUser );
+        // Check if we're on the client side
+        if ( typeof window !== 'undefined' ) {
+            const storedUser = localStorage.getItem( "user" );
+            if ( !storedUser ) {
+                router.push( "/" );
             } else {
-                throw new Error( "Invalid user data" );
+                setUser( JSON.parse( storedUser ) );
             }
-        } catch ( error ) {
-            console.error( "Error parsing user data:", error );
-            // Clear invalid data
-            localStorage.removeItem( "user" );
-            localStorage.removeItem( "token" );
-            router.push( "/" );
-        } finally {
-            setLoading( false );
+            setIsLoading( false );
         }
     }, [ router ] );
 
     const handleLogout = () => {
-        localStorage.removeItem( "user" );
         localStorage.removeItem( "token" );
+        localStorage.removeItem( "user" );
         router.push( "/" );
     };
 
-    if ( !mounted || loading ) {
+    // Show loading state
+    if ( isLoading ) {
         return (
-            <div>
-                <Navbar />
-                <div className="flex justify-center mt-12">
-                    <div className="bg-white shadow-md p-6 w-[28rem] rounded-xl text-center">
-                        Loading profile...
-                    </div>
-                </div>
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
             </div>
         );
     }
 
-    // Additional check in case user is null after loading
-    if ( !user ) {
-        return (
-            <div>
-                <Navbar />
-                <div className="flex justify-center mt-12">
-                    <div className="bg-white shadow-md p-6 w-[28rem] rounded-xl text-center">
-                        User data not available. Please login again.
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // Show nothing if no user
+    if ( !user ) return null;
 
     return (
-        <div>
+        <div className="min-h-screen bg-gray-50">
             <Navbar />
-            <div className="flex justify-center mt-12">
-                <div className="bg-white shadow-md p-6 w-[28rem] rounded-xl">
-                    <div className="text-center">
-                        <FaUser size={ 60 } className="text-blue-500 mb-3 mx-auto" />
-                        <h2 className="text-2xl font-semibold">User Profile</h2>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="max-w-md mx-auto">
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                        {/* Profile Header */ }
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-center">
+                            <div className="inline-block p-4 bg-white/10 rounded-full backdrop-blur-sm">
+                                <FaUser size={ 60 } className="text-white" />
+                            </div>
+                            <h2 className="mt-4 text-2xl font-bold text-white">User Profile</h2>
+                        </div>
+
+                        {/* Profile Details */ }
+                        <div className="p-6 space-y-6">
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <FaUser className="text-blue-600 text-xl" />
+                                    <div>
+                                        <p className="text-sm text-gray-500">Name</p>
+                                        <p className="font-medium text-gray-900">{ user.name }</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                    <FaEnvelope className="text-green-600 text-xl" />
+                                    <div>
+                                        <p className="text-sm text-gray-500">Email</p>
+                                        <p className="font-medium text-gray-900">{ user.email }</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                className="w-full flex items-center justify-center space-x-2 bg-red-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-600 transition-all duration-300 ease-in-out"
+                                onClick={ handleLogout }
+                            >
+                                <FaSignOutAlt />
+                                <span>Logout</span>
+                            </button>
+                        </div>
                     </div>
-                    <hr className="my-4" />
-                    <div className="px-2 space-y-3">
-                        <p className="flex items-center text-gray-700">
-                            <FaUser className="text-blue-500 mr-2" />
-                            <strong className="mr-1">Name:</strong> { user?.name || "N/A" }
-                        </p>
-                        <p className="flex items-center text-gray-700">
-                            <FaEnvelope className="text-green-500 mr-2" />
-                            <strong className="mr-1">Email:</strong> { user?.email || "N/A" }
-                        </p>
-                    </div>
-                    <button
-                        className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md flex items-center justify-center font-semibold"
-                        onClick={ handleLogout }
-                    >
-                        <FaSignOutAlt className="mr-2" /> Logout
-                    </button>
                 </div>
             </div>
         </div>

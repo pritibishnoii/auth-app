@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 import {
     FaUser,
     FaEnvelope,
@@ -7,166 +7,155 @@ import {
     FaSignInAlt,
     FaUserPlus,
 } from "react-icons/fa";
-import { useRouter } from 'next/navigation';
-import axios from 'axios';
-import { toast } from 'react-toastify';
 
-export const AuthForm = () => {
+
+import { toast } from "react-toastify";
+
+import axios from "axios";
+import { useRouter } from "next/navigation";
+
+const AuthForm = () => {
     const router = useRouter();
     const [ formData, setFormData ] = useState( {
         name: "",
         email: "",
         password: "",
     } );
+
     const [ isLogin, setIsLogin ] = useState( true );
+    const [ message, setMessage ] = useState( "" );
     const [ loading, setLoading ] = useState( false );
-    const [ mounted, setMounted ] = useState( false );
 
     useEffect( () => {
-        setMounted( true ); // Component is now mounted client-side
-        if ( typeof window !== "undefined" && localStorage.getItem( "token" ) ) {
+        if ( localStorage.getItem( "token" ) ) {
             router.push( "/profile" );
         }
     }, [] );
 
     const handleChange = ( e ) => {
         setFormData( { ...formData, [ e.target.name ]: e.target.value } );
+        // console.log("getting input data ",formData)
     };
 
     const handleSubmit = async ( e ) => {
         e.preventDefault();
+        setMessage( "" );
         setLoading( true );
+
+        //   http://localhost:3001/api/auth?login=true
 
         const url = isLogin ? "/api/auth?login=true" : "/api/auth?signup=true";
 
         try {
             const { data } = await axios.post( url, formData, {
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                },
             } );
 
-            if ( !data.success ) {
-                throw new Error( data.message || "Authentication failed" );
-            }
 
+            // console.log( "data from backend = ", data );
+            setMessage( data.message );
+            toast.success( data.message )
             if ( isLogin ) {
                 localStorage.setItem( "token", data.token );
                 localStorage.setItem( "user", JSON.stringify( data.user ) );
                 router.push( "/profile" );
-            } else {
-                toast.success( "Registration successful! Please login" );
-                setIsLogin( true );
-                setFormData( { name: "", email: "", password: "" } );
             }
-
         } catch ( error ) {
-            toast.error( error.response?.data?.message || error.message || "Something went wrong" );
+            const errorMessage =
+                error.response?.data?.message || error.message || "Something went wrong";
+            toast.error( errorMessage );
+            setMessage( "Something went wrong" );
+
         } finally {
             setLoading( false );
         }
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen ">
-            <div className="bg-white shadow-md p-6 w-full max-w-md rounded-xl">
-                <div className="text-center">
-                    { isLogin ? (
-                        <FaSignInAlt size={ 50 } className="text-blue-500 mb-3 mx-auto" />
-                    ) : (
-                        <FaUserPlus size={ 50 } className="text-green-500 mb-3 mx-auto" />
-                    ) }
-                    <h2 className="text-2xl font-bold">
-                        { isLogin ? "Login" : "Sign Up" }
-                    </h2>
-                </div>
+        <div>
 
-                <form onSubmit={ handleSubmit } className="mt-6 space-y-4">
-                    { !isLogin && (
-                        <div className="flex flex-col">
-                            <label className="text-sm font-medium text-gray-700 mb-1">Name</label>
-                            <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
-                                <span className="bg-gray-100 p-3 text-blue-500">
-                                    <FaUser />
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="bg-white p-6 rounded-xl shadow-md" style={ { width: "28rem" } }>
+                    <div className="text-center">
+                        { isLogin ? (
+                            <FaSignInAlt size={ 50 } className="text-blue-600 mb-3 mx-auto" />
+                        ) : (
+                            <FaUserPlus size={ 50 } className="text-green-600 mb-3 mx-auto" />
+                        ) }
+                        <h2 className="font-bold text-xl">{ isLogin ? "Login" : "SignUp" }</h2>
+                    </div>
+                    <hr className="my-4" />
+                    <form onSubmit={ handleSubmit }>
+                        {/* user input */ }
+                        { !isLogin && (
+                            <div className="mb-3 flex">
+                                <span className="bg-gray-100 p-2 rounded-l-md border border-r-0 border-gray-300">
+                                    <FaUser className="text-blue-600" />
                                 </span>
                                 <input
                                     type="text"
                                     name="name"
-                                    placeholder="Your name"
+                                    placeholder="Name"
                                     value={ formData.name }
                                     onChange={ handleChange }
-                                    className="w-full p-2 outline-none"
+                                    className="flex-1 p-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
-                                    minLength={ 3 }
                                 />
                             </div>
-                        </div>
-                    ) }
+                        ) }
 
-                    <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
-                            <span className="bg-gray-100 p-3 text-green-500">
-                                <FaEnvelope />
+                        {/* email input */ }
+                        <div className="mb-3 flex">
+                            <span className="bg-gray-100 p-2 rounded-l-md border border-r-0 border-gray-300">
+                                <FaEnvelope className="text-green-600" />
                             </span>
                             <input
                                 type="email"
                                 name="email"
-                                placeholder="your@email.com"
+                                placeholder="Email"
                                 value={ formData.email }
                                 onChange={ handleChange }
-                                className="w-full p-2 outline-none"
+                                className="flex-1 p-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-green-500"
                                 required
                             />
                         </div>
-                    </div>
 
-                    <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
-                            <span className="bg-gray-100 p-3 text-red-500">
-                                <FaLock />
+                        {/* password input */ }
+                        <div className="mb-3 flex">
+                            <span className="bg-gray-100 p-2 rounded-l-md border border-r-0 border-gray-300">
+                                <FaLock className="text-red-600" />
                             </span>
                             <input
                                 type="password"
                                 name="password"
-                                placeholder="••••••••"
+                                placeholder="Password"
                                 value={ formData.password }
                                 onChange={ handleChange }
-                                className="w-full p-2 outline-none"
+                                className="flex-1 p-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-red-500"
                                 required
-                                minLength={ 6 }
                             />
                         </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={ loading }
-                        className={ `w-full py-2 px-4 rounded-md text-white font-semibold ${ isLogin
-                            ? "bg-blue-500 hover:bg-blue-600"
-                            : "bg-green-500 hover:bg-green-600"
-                            } ${ loading ? "opacity-70 cursor-not-allowed" : ""
-                            } transition-colors` }
-                    >
-                        { loading ? (
-                            <span className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
-                        ) : isLogin ? (
-                            "Login"
-                        ) : (
-                            "Sign Up"
-                        ) }
-                    </button>
-                </form>
-
-                <p className="text-center mt-4 text-sm">
-                    { isLogin ? "Don't have an account? " : "Already have an account? " }
-                    <button
+                        <button
+                            type="submit"
+                            className={ `w-full py-2 rounded-md text-white font-semibold ${ isLogin ? "bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500" : "bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500" }` }
+                            disabled={ loading }
+                        >
+                            { loading ? <div className="loader"></div> : isLogin ? "Login" : "Signup" }
+                        </button>
+                    </form>
+                    <p
+                        className="text-center mt-3 text-blue-600 cursor-pointer hover:text-blue-700"
                         onClick={ () => setIsLogin( !isLogin ) }
-                        className="text-blue-500 hover:text-blue-700 font-medium"
                     >
-                        { isLogin ? "Sign up" : "Login" }
-                    </button>
-                </p>
+                        { isLogin ? "Create an account" : "Already have an account? Login" }
+                    </p>
+                    { message && <p className="text-red-600 text-center mt-2">{ message }</p> }
+                </div>
             </div>
         </div>
     );
 };
+
+export default AuthForm;
