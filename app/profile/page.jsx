@@ -21,7 +21,12 @@ const ProfilePage = () => {
         // Check if we're on the client side
         if ( typeof window !== 'undefined' ) {
             const storedUser = localStorage.getItem( "user" );
-            setUser( storedUser ? JSON.parse( storedUser || "null" ) : router.push( "/" ) );
+            const user = storedUser ? JSON.parse( storedUser ) : null;
+            if ( user ) {
+                setUser( user );
+            } else {
+                router.push( "/" );
+            }
             setIsLoading( false );
         }
     }, [ router ] );
