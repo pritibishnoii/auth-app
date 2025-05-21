@@ -66,7 +66,7 @@ export const AuthForm = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="flex justify-center items-center min-h-screen ">
             <div className="bg-white shadow-md p-6 w-full max-w-md rounded-xl">
                 <div className="text-center">
                     { isLogin ? (
