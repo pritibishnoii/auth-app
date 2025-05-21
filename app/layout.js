@@ -20,7 +20,7 @@ export default function RootLayout ( { children } ) {
   return (
     <html lang="en">
       <body
-        className={ `bg-indigo-900` }
+        className={ `bg-indigo-950 ` }
       >
         { children }
       </body>

@@ -2,6 +2,7 @@ import User from "../Models/User";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
+import cors from "cors"
 
 
 // user rgister 

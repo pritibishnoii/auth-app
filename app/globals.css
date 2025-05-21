@@ -1,9 +1,9 @@
 @import "tailwindcss";
-
+/* 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
+} */
 
 .loader {
   width: 24px;

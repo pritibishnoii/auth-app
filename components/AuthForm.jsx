@@ -9,73 +9,65 @@ import {
 } from "react-icons/fa";
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
-
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 export const AuthForm = () => {
-    const router = useRouter()
-    const [ isLogin, setIsLogin ] = useState( false )
-    const [ loading, setLoading ] = useState( false )
-    const [ message, setMessage ] = useState( "" )
-    const [ mounted, setMounted ] = useState( false )
+
+    const router = useRouter();
     const [ formData, setFormData ] = useState( {
         name: "",
         email: "",
-        password: ""
-    } )
+        password: "",
+    } );
+
+    const [ isLogin, setIsLogin ] = useState( true );
+    const [ message, setMessage ] = useState( "" );
+    const [ loading, setLoading ] = useState( false );
 
     useEffect( () => {
-        setMounted( true )
         if ( localStorage.getItem( "token" ) ) {
             router.push( "/profile" );
         }
-    }, [] )
+    }, [] );
 
     const handleChange = ( e ) => {
-        setFormData( { ...formData, [ e.target.name ]: e.target.value } )
-    }
+        setFormData( { ...formData, [ e.target.name ]: e.target.value } );
+        // console.log("getting input data ",formData)
+    };
 
     const handleSubmit = async ( e ) => {
         e.preventDefault();
-        setLoading( true );
         setMessage( "" );
+        setLoading( true );
 
-        // http://localhost:3001
-        const url = isLogin ? "/api/auth?login=true" : "/api/auth?signup=true"
+        //   http://localhost:3001/api/auth?login=true
+
+        const url = isLogin ? "/api/auth?login=true" : "/api/auth?signup=true";
 
         try {
-            const response = await axios.post( url, formData, {
+            const { data } = await axios.post( url, formData, {
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            } )
-            // console.log( "response from backend", response )
-            setMessage( response?.data?.message )
+                    "Content-Type": "application/json",
+                },
+            } );
+            console.log( "data from backend = ", data );
+            setMessage( data.message );
 
             if ( isLogin ) {
-                localStorage.setItem( "token", response?.data?.user )
-                localStorage.setItem( "user", JSON.stringify( response?.data?.user ) )
+                localStorage.setItem( "token", data.token );
+                localStorage.setItem( "user", JSON.stringify( data.user ) );
                 router.push( "/profile" );
-            } else {
-                setIsLogin( true );
-
             }
-        }
-        catch ( error ) {
+        } catch ( error ) {
             setMessage( "Something went wrong" );
         } finally {
             setLoading( false );
         }
-
-    }
-
-    if ( !mounted ) {
-        return null
-    }
+    };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <div className="flex justify-center items-center min-h-screen ">
             <div className="bg-white shadow-md p-6 w-[28rem] rounded-xl">
                 <div className="text-center">
                     { isLogin ? (
@@ -89,7 +81,6 @@ export const AuthForm = () => {
                 </div>
                 <hr className="my-4" />
                 <form onSubmit={ handleSubmit }>
-                    {/* user input */ }
                     { !isLogin && (
                         <div className="mb-4 flex items-center border border-gray-300 rounded-md overflow-hidden">
                             <span className="bg-gray-100 p-2 text-blue-500">
@@ -103,11 +94,11 @@ export const AuthForm = () => {
                                 onChange={ handleChange }
                                 className="w-full p-2 outline-none"
                                 required
+                                minLength={ 3 }
                             />
                         </div>
                     ) }
 
-                    {/* email input */ }
                     <div className="mb-4 flex items-center border border-gray-300 rounded-md overflow-hidden">
                         <span className="bg-gray-100 p-2 text-green-500">
                             <FaEnvelope />
@@ -123,7 +114,6 @@ export const AuthForm = () => {
                         />
                     </div>
 
-                    {/* password input */ }
                     <div className="mb-4 flex items-center border border-gray-300 rounded-md overflow-hidden">
                         <span className="bg-gray-100 p-2 text-red-500">
                             <FaLock />
@@ -136,31 +126,40 @@ export const AuthForm = () => {
                             onChange={ handleChange }
                             className="w-full p-2 outline-none"
                             required
+                            minLength={ 6 }
                         />
                     </div>
 
                     <button
                         type="submit"
                         className={ twMerge( clsx(
-                            "w-full py-2 rounded-md text-white font-semibold",
+                            "w-full py-2 rounded-md text-white font-semibold flex justify-center",
                             isLogin ? "bg-blue-500 hover:bg-blue-600" : "bg-green-500 hover:bg-green-600",
+                            loading && "opacity-70 cursor-not-allowed"
                         ) ) }
                         disabled={ loading }
-
                     >
-                        { loading ? <div className='loader'></div> : isLogin ? "Login" : "Signup" }
+                        { loading ? (
+                            <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                        ) : isLogin ? "Login" : "Signup" }
                     </button>
                 </form>
 
                 <p
-                    className="text-center mt-4 text-blue-500 cursor-pointer"
-                    onClick={ () => setIsLogin( !isLogin ) }
+                    className="text-center mt-4 text-blue-500 cursor-pointer hover:text-blue-700 transition-colors"
+                    onClick={ () => {
+                        setIsLogin( !isLogin )
+                        setMessage( { text: "", type: "" } )
+                    } }
                 >
                     { isLogin ? "Create an account" : "Already have an account? Login" }
                 </p>
 
-                { message && (
-                    <p className="text-center text-red-500 mt-2">{ message }</p>
+                { message.text && (
+                    <p className={ `text-center mt-2 ${ message.type === "error" ? "text-red-500" : "text-green-500"
+                        }` }>
+                        { message.text }
+                    </p>
                 ) }
             </div>
         </div>
