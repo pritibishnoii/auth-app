@@ -1,5 +1,5 @@
-"use client"
-import React, { useState, useEffect } from 'react'
+"use client";
+import React, { useState, useEffect } from 'react';
 import {
     FaUser,
     FaEnvelope,
@@ -7,69 +7,67 @@ import {
     FaSignInAlt,
     FaUserPlus,
 } from "react-icons/fa";
-import clsx from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export const AuthForm = () => {
-
     const router = useRouter();
     const [ formData, setFormData ] = useState( {
         name: "",
         email: "",
         password: "",
     } );
-
     const [ isLogin, setIsLogin ] = useState( true );
-    const [ message, setMessage ] = useState( "" );
     const [ loading, setLoading ] = useState( false );
+    const [ mounted, setMounted ] = useState( false );
 
     useEffect( () => {
-        if ( localStorage.getItem( "token" ) ) {
+        setMounted( true ); // Component is now mounted client-side
+        if ( typeof window !== "undefined" && localStorage.getItem( "token" ) ) {
             router.push( "/profile" );
         }
     }, [] );
 
     const handleChange = ( e ) => {
         setFormData( { ...formData, [ e.target.name ]: e.target.value } );
-        // console.log("getting input data ",formData)
     };
 
     const handleSubmit = async ( e ) => {
         e.preventDefault();
-        setMessage( "" );
         setLoading( true );
-
-        //   http://localhost:3001/api/auth?login=true
 
         const url = isLogin ? "/api/auth?login=true" : "/api/auth?signup=true";
 
         try {
             const { data } = await axios.post( url, formData, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
             } );
-            console.log( "data from backend = ", data );
-            setMessage( data.message );
+
+            if ( !data.success ) {
+                throw new Error( data.message || "Authentication failed" );
+            }
 
             if ( isLogin ) {
                 localStorage.setItem( "token", data.token );
                 localStorage.setItem( "user", JSON.stringify( data.user ) );
                 router.push( "/profile" );
-
+            } else {
+                toast.success( "Registration successful! Please login" );
+                setIsLogin( true );
+                setFormData( { name: "", email: "", password: "" } );
             }
+
         } catch ( error ) {
-            setMessage( "Something went wrong" );
+            toast.error( error.response?.data?.message || error.message || "Something went wrong" );
         } finally {
             setLoading( false );
         }
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen ">
-            <div className="bg-white shadow-md p-6 w-[28rem] rounded-xl">
+        <div className="flex justify-center items-center min-h-screen bg-gray-50">
+            <div className="bg-white shadow-md p-6 w-full max-w-md rounded-xl">
                 <div className="text-center">
                     { isLogin ? (
                         <FaSignInAlt size={ 50 } className="text-blue-500 mb-3 mx-auto" />
@@ -77,92 +75,98 @@ export const AuthForm = () => {
                         <FaUserPlus size={ 50 } className="text-green-500 mb-3 mx-auto" />
                     ) }
                     <h2 className="text-2xl font-bold">
-                        { isLogin ? "Login" : "SignUp" }
+                        { isLogin ? "Login" : "Sign Up" }
                     </h2>
                 </div>
-                <hr className="my-4" />
-                <form onSubmit={ handleSubmit }>
+
+                <form onSubmit={ handleSubmit } className="mt-6 space-y-4">
                     { !isLogin && (
-                        <div className="mb-4 flex items-center border border-gray-300 rounded-md overflow-hidden">
-                            <span className="bg-gray-100 p-2 text-blue-500">
-                                <FaUser />
-                            </span>
-                            <input
-                                type="text"
-                                name="name"
-                                placeholder="Name"
-                                value={ formData.name }
-                                onChange={ handleChange }
-                                className="w-full p-2 outline-none"
-                                required
-                                minLength={ 3 }
-                            />
+                        <div className="flex flex-col">
+                            <label className="text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                                <span className="bg-gray-100 p-3 text-blue-500">
+                                    <FaUser />
+                                </span>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    placeholder="Your name"
+                                    value={ formData.name }
+                                    onChange={ handleChange }
+                                    className="w-full p-2 outline-none"
+                                    required
+                                    minLength={ 3 }
+                                />
+                            </div>
                         </div>
                     ) }
 
-                    <div className="mb-4 flex items-center border border-gray-300 rounded-md overflow-hidden">
-                        <span className="bg-gray-100 p-2 text-green-500">
-                            <FaEnvelope />
-                        </span>
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="Email"
-                            value={ formData.email }
-                            onChange={ handleChange }
-                            className="w-full p-2 outline-none"
-                            required
-                        />
+                    <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                            <span className="bg-gray-100 p-3 text-green-500">
+                                <FaEnvelope />
+                            </span>
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder="your@email.com"
+                                value={ formData.email }
+                                onChange={ handleChange }
+                                className="w-full p-2 outline-none"
+                                required
+                            />
+                        </div>
                     </div>
 
-                    <div className="mb-4 flex items-center border border-gray-300 rounded-md overflow-hidden">
-                        <span className="bg-gray-100 p-2 text-red-500">
-                            <FaLock />
-                        </span>
-                        <input
-                            type="password"
-                            name="password"
-                            placeholder="Password"
-                            value={ formData.password }
-                            onChange={ handleChange }
-                            className="w-full p-2 outline-none"
-                            required
-                            minLength={ 6 }
-                        />
+                    <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                            <span className="bg-gray-100 p-3 text-red-500">
+                                <FaLock />
+                            </span>
+                            <input
+                                type="password"
+                                name="password"
+                                placeholder="••••••••"
+                                value={ formData.password }
+                                onChange={ handleChange }
+                                className="w-full p-2 outline-none"
+                                required
+                                minLength={ 6 }
+                            />
+                        </div>
                     </div>
 
                     <button
                         type="submit"
-                        className={ twMerge( clsx(
-                            "w-full py-2 rounded-md text-white font-semibold flex justify-center",
-                            isLogin ? "bg-blue-500 hover:bg-blue-600" : "bg-green-500 hover:bg-green-600",
-                            loading && "opacity-70 cursor-not-allowed"
-                        ) ) }
                         disabled={ loading }
+                        className={ `w-full py-2 px-4 rounded-md text-white font-semibold ${ isLogin
+                            ? "bg-blue-500 hover:bg-blue-600"
+                            : "bg-green-500 hover:bg-green-600"
+                            } ${ loading ? "opacity-70 cursor-not-allowed" : ""
+                            } transition-colors` }
                     >
                         { loading ? (
-                            <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
-                        ) : isLogin ? "Login" : "Signup" }
+                            <span className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                        ) : isLogin ? (
+                            "Login"
+                        ) : (
+                            "Sign Up"
+                        ) }
                     </button>
                 </form>
 
-                <p
-                    className="text-center mt-4 text-blue-500 cursor-pointer hover:text-blue-700 transition-colors"
-                    onClick={ () => {
-                        setIsLogin( !isLogin )
-                        setMessage( { text: "", type: "" } )
-                    } }
-                >
-                    { isLogin ? "Create an account" : "Already have an account? Login" }
+                <p className="text-center mt-4 text-sm">
+                    { isLogin ? "Don't have an account? " : "Already have an account? " }
+                    <button
+                        onClick={ () => setIsLogin( !isLogin ) }
+                        className="text-blue-500 hover:text-blue-700 font-medium"
+                    >
+                        { isLogin ? "Sign up" : "Login" }
+                    </button>
                 </p>
-
-                { message.text && (
-                    <p className={ `text-center mt-2 ${ message.type === "error" ? "text-red-500" : "text-green-500"
-                        }` }>
-                        { message.text }
-                    </p>
-                ) }
             </div>
         </div>
-    )
-}
+    );
+};

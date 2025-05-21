@@ -7,10 +7,18 @@ import { useRouter } from "next/navigation";
 const ProfilePage = () => {
     const [ user, setUser ] = useState( null );
     const [ loading, setLoading ] = useState( true );
+    const [ mounted, setMounted ] = useState( false )
     const router = useRouter();
 
     useEffect( () => {
-        // Only run on client side
+
+        setMounted( true ); // Mark component as mounted (client-side)
+        // Ensure this only runs on client side
+        if ( typeof window === "undefined" ) {
+            setLoading( false );
+            return;
+        }
+
         const storedUser = localStorage.getItem( "user" );
         const token = localStorage.getItem( "token" );
 
@@ -23,9 +31,14 @@ const ProfilePage = () => {
             const parsedUser = JSON.parse( storedUser );
             if ( parsedUser ) {
                 setUser( parsedUser );
+            } else {
+                throw new Error( "Invalid user data" );
             }
         } catch ( error ) {
             console.error( "Error parsing user data:", error );
+            // Clear invalid data
+            localStorage.removeItem( "user" );
+            localStorage.removeItem( "token" );
             router.push( "/" );
         } finally {
             setLoading( false );
@@ -33,15 +46,12 @@ const ProfilePage = () => {
     }, [ router ] );
 
     const handleLogout = () => {
-
         localStorage.removeItem( "user" );
         localStorage.removeItem( "token" );
-
         router.push( "/" );
-
     };
 
-    if ( loading ) {
+    if ( !mounted || loading ) {
         return (
             <div>
                 <Navbar />
@@ -54,7 +64,19 @@ const ProfilePage = () => {
         );
     }
 
-
+    // Additional check in case user is null after loading
+    if ( !user ) {
+        return (
+            <div>
+                <Navbar />
+                <div className="flex justify-center mt-12">
+                    <div className="bg-white shadow-md p-6 w-[28rem] rounded-xl text-center">
+                        User data not available. Please login again.
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -69,11 +91,11 @@ const ProfilePage = () => {
                     <div className="px-2 space-y-3">
                         <p className="flex items-center text-gray-700">
                             <FaUser className="text-blue-500 mr-2" />
-                            <strong className="mr-1">Name:</strong> { user.name }
+                            <strong className="mr-1">Name:</strong> { user?.name || "N/A" }
                         </p>
                         <p className="flex items-center text-gray-700">
                             <FaEnvelope className="text-green-500 mr-2" />
-                            <strong className="mr-1">Email:</strong> { user.email }
+                            <strong className="mr-1">Email:</strong> { user?.email || "N/A" }
                         </p>
                     </div>
                     <button

@@ -1,78 +1,99 @@
 import User from "../Models/User";
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
-import cors from "cors"
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
+// Helper function to handle errors
+const handleError = ( error, message = "Server error" ) => {
+    console.error( message, error );
+    return NextResponse.json(
+        { message, error: error.message },
+        { status: 500 }
+    );
+};
 
-// user rgister 
+// User registration
 export const register = async ( req ) => {
-    const body = await req.json()
-    const { name, email, password } = body
-    // console.log( name, email, password )
     try {
-        let user = await User.findOne( { email: email } )
+        const { name, email, password } = await req.json();
 
-        if ( user ) return NextResponse.json( {
-            message: "user already exist... ",
-            success: false
-        } )
-        const hashedPassword = await bcrypt.hash( password, 10 )
-        user = await User.create( { name, email, password: hashedPassword } )
-
-        return NextResponse.json( {
-            message: "user register Successfully,",
-            user,
-            success: true,
-        } )
-    } catch ( error ) {
-        return NextResponse.json( {
-            message: "server error",
-            error: error.message
-        } )
-    }
-
-}
-
-
-
-// user login 
-export const login = async ( req ) => {
-    const { email, password } = await req.json()
-    try {
-        let user = await User.findOne( { email } )
-        if ( !user ) return NextResponse.json( {
-            message: "user not exist",
-            success: false,
-
-        } )
-
-        // if user finded 
-        const validPass = await bcrypt.compare( password, user.password )
-        if ( !validPass ) {
-            return NextResponse.json( {
-                message: "password is invalid ",
-                success: false,
-
-            } )
+        if ( !name || !email || !password ) {
+            return NextResponse.json(
+                { message: "All fields are required", success: false },
+                { status: 400 }
+            );
         }
 
-        const token = jwt.sign( { id: user._id }, process.env.SECRET_KEY, {
-            expiresIn: "1d",
-        } )
-        return NextResponse.json( {
-            message: `${ user.name } logedin successfully  `,
-            success: true,
-            user,
-            token
+        const existingUser = await User.findOne( { email } );
+        if ( existingUser ) {
+            return NextResponse.json(
+                { message: "User already exists", success: false },
+                { status: 409 }
+            );
+        }
 
-        } )
+        const hashedPassword = await bcrypt.hash( password, 10 );
+        const user = await User.create( { name, email, password: hashedPassword } );
 
+        return NextResponse.json(
+            {
+                message: "User registered successfully",
+                user: { id: user._id, name: user.name, email: user.email },
+                success: true
+            },
+            { status: 201 }
+        );
 
     } catch ( error ) {
-        return NextResponse.json( {
-            message: "login server  error",
-            error: error.message
-        } )
+        return handleError( error, "Registration failed" );
     }
-}
+};
+
+// User login
+export const login = async ( req ) => {
+    try {
+        const { email, password } = await req.json();
+
+        if ( !email || !password ) {
+            return NextResponse.json(
+                { message: "Email and password are required", success: false },
+                { status: 400 }
+            );
+        }
+
+        const user = await User.findOne( { email } );
+        if ( !user ) {
+            return NextResponse.json(
+                { message: "Invalid credentials", success: false },
+                { status: 401 }
+            );
+        }
+
+        const validPass = await bcrypt.compare( password, user.password );
+        if ( !validPass ) {
+            return NextResponse.json(
+                { message: "Invalid credentials", success: false },
+                { status: 401 }
+            );
+        }
+
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.SECRET_KEY,
+            { expiresIn: "1d" }
+        );
+
+        return NextResponse.json(
+            {
+                message: "Login successful",
+                success: true,
+                token,
+                user: { id: user._id, name: user.name, email: user.email }
+            },
+            { status: 200 }
+        );
+
+    } catch ( error ) {
+        return handleError( error, "Login failed" );
+    }
+};
