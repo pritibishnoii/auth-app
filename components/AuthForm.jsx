@@ -54,7 +54,7 @@ const AuthForm = () => {
             } );
 
 
-            // console.log( "data from backend = ", data );
+            console.log( "data from backend = ", data );
             setMessage( data.message );
             toast.success( data.message )
             if ( isLogin ) {
@@ -66,6 +66,7 @@ const AuthForm = () => {
             const errorMessage =
                 error.response?.data?.message || error.message || "Something went wrong";
             toast.error( errorMessage );
+
             setMessage( "Something went wrong" );
 
         } finally {
