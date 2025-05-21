@@ -20,7 +20,8 @@ const ProfilePage = () => {
             return;
         }
 
-        const parsedUser = JSON.parse( storedUser );
+        const parsedUser = JSON.parse( String( storedUser ) );
+        console.log( parsedUser )
         if ( parsedUser ) {
             setUser( parsedUser );
             setLoading( false )
