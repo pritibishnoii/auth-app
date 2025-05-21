@@ -58,6 +58,7 @@ export const AuthForm = () => {
                 localStorage.setItem( "token", data.token );
                 localStorage.setItem( "user", JSON.stringify( data.user ) );
                 router.push( "/profile" );
+
             }
         } catch ( error ) {
             setMessage( "Something went wrong" );

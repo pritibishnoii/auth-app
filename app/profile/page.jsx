@@ -11,7 +11,6 @@ const ProfilePage = () => {
 
     useEffect( () => {
         // Only run on client side
-
         const storedUser = localStorage.getItem( "user" );
         const token = localStorage.getItem( "token" );
 
@@ -20,14 +19,17 @@ const ProfilePage = () => {
             return;
         }
 
-        const parsedUser = JSON.parse( String( storedUser ) );
-        console.log( parsedUser )
-        if ( parsedUser ) {
-            setUser( parsedUser );
-            setLoading( false )
+        try {
+            const parsedUser = JSON.parse( storedUser );
+            if ( parsedUser ) {
+                setUser( parsedUser );
+            }
+        } catch ( error ) {
+            console.error( "Error parsing user data:", error );
+            router.push( "/" );
+        } finally {
+            setLoading( false );
         }
-
-
     }, [ router ] );
 
     const handleLogout = () => {
@@ -52,7 +54,7 @@ const ProfilePage = () => {
         );
     }
 
-    if ( !user ) return null;
+
 
     return (
         <div>
