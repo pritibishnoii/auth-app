@@ -3,14 +3,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// Helper function to handle errors
-// const handleError = ( error, message = "Server error" ) => {
-//     console.error( message, error );
-//     return NextResponse.json(
-//         { message, error: error.message },
-//         { status: 500 }
-//     );
-// };
+
 
 // User registration
 export const register = async ( req ) => {
